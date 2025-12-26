@@ -1,8 +1,8 @@
-import typer
-
+from collections.abc import Generator
 from enum import Enum
-from typing import Generator
-from typing_extensions import Annotated
+from typing import Annotated
+
+import typer
 
 
 class OutputType(str, Enum):
@@ -10,10 +10,10 @@ class OutputType(str, Enum):
     LATEX = "LaTeX"
 
 
-VALID_OUTPUT_TYPES = [output_type.value for output_type in OutputType]
+VALID_OUTPUT_TYPES: list[str] = [output_type.value for output_type in OutputType]
 
 
-def complete_output_type(incomplete: str) -> Generator[str, None, None]:
+def complete_output_type(incomplete: str) -> Generator[str]:
     for output_type in VALID_OUTPUT_TYPES:
         if output_type.startswith(incomplete.upper()):
             yield output_type
@@ -21,7 +21,10 @@ def complete_output_type(incomplete: str) -> Generator[str, None, None]:
 
 app = typer.Typer(
     no_args_is_help=True,
-    help="A declarative Python based CLI tool that generates resumes from YAML files using LaTeX templates",
+    help=(
+        "A declarative Python based CLI tool that generates resumes from "
+        "YAML files using LaTeX templates"
+    ),
 )
 
 
