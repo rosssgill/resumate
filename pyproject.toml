@@ -5,7 +5,9 @@ description = "A declarative Python based CLI tool that generates resumes from J
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "httpx>=0.28.1",
     "pydantic>=2.12.5",
+    "pydantic-ai-slim[anthropic,google,openai]>=2.55.0",
     "typer>=0.20.1",
     "typst>=0.15.0",
 ]
