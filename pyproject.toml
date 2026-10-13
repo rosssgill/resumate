@@ -1,14 +1,13 @@
 [project]
 name = "resumate"
 version = "0.1.0"
-description = "A declarative Python based CLI tool that generates resumes from YAML files using LaTeX templates"
+description = "A declarative Python based CLI tool that generates resumes from JSON Resume files using Typst templates"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
-    "jinja2>=3.1.6",
     "pydantic>=2.12.5",
-    "pyyaml>=6.0.3",
     "typer>=0.20.1",
+    "typst>=0.15.0",
 ]
 
 [dependency-groups]
@@ -38,3 +37,6 @@ quote-style = "double"
 indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "auto"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
