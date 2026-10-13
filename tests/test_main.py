@@ -65,3 +65,39 @@ def test_compile_reports_non_utf8_file(tmp_path):
 
     assert result.exit_code == 1
     assert "UTF-8" in result.output
+
+
+def long_resume(bullets: int) -> str:
+    bullet = "Delivered a meaningful improvement to a system that mattered a lot."
+    return json.dumps({"work": [{"name": "Acme", "highlights": [bullet] * bullets}]})
+
+
+def test_compile_warns_when_resume_overflows_page_limit(tmp_path):
+    resume_path = tmp_path / "cv.json"
+    resume_path.write_text(long_resume(200))
+
+    result = runner.invoke(app, [str(resume_path)])
+
+    assert result.exit_code == 0, result.output
+    assert "exceeds the 1 page limit" in result.output
+    assert (tmp_path / "cv.pdf").exists()
+
+
+def test_compile_accepts_larger_page_limit(tmp_path):
+    resume_path = tmp_path / "cv.json"
+    resume_path.write_text(long_resume(60))
+
+    result = runner.invoke(app, [str(resume_path), "--max-pages", "3"])
+
+    assert result.exit_code == 0, result.output
+    assert "exceeds" not in result.output
+
+
+def test_compile_uses_requested_paper(tmp_path):
+    resume_path = tmp_path / "cv.json"
+    resume_path.write_text("{}")
+
+    result = runner.invoke(app, [str(resume_path), "--paper", "us-letter"])
+
+    assert result.exit_code == 0, result.output
+    assert b"612 792" in (tmp_path / "cv.pdf").read_bytes()

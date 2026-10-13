@@ -5,7 +5,7 @@ import typer
 from pydantic import ValidationError
 
 from models import Resume
-from render import render_pdf
+from render import Paper, render_to_fit
 
 app = typer.Typer(
     no_args_is_help=True,
@@ -30,6 +30,10 @@ def compile(
             help="Where to write the PDF", show_default="input path with .pdf"
         ),
     ] = None,
+    max_pages: Annotated[
+        int, typer.Option(min=1, help="Shrink the text to fit within this many pages")
+    ] = 1,
+    paper: Annotated[Paper, typer.Option(help="Paper size")] = Paper.A4,
 ) -> None:
     """
     Compile a resume from a JSON Resume file into a PDF.
@@ -45,8 +49,16 @@ def compile(
 
     output_path = output or file_path.with_suffix(".pdf")
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_bytes(render_pdf(resume))
-    typer.echo(f"Wrote {output_path}")
+    rendered = render_to_fit(resume, max_pages=max_pages, paper=paper)
+    output_path.write_bytes(rendered.pdf)
+    pages = f"{rendered.pages} page{'s' if rendered.pages > 1 else ''}"
+    typer.echo(f"Wrote {output_path} ({pages}, {rendered.font_size:g}pt text)")
+    if rendered.pages > max_pages:
+        typer.echo(
+            f"Warning: resume exceeds the {max_pages} page limit "
+            "even at the smallest text size",
+            err=True,
+        )
 
 
 if __name__ == "__main__":

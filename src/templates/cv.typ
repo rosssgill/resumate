@@ -2,13 +2,15 @@
 #let basics = resume.at("basics", default: (:))
 
 #set document(title: basics.at("name", default: "CV"))
-#set page(paper: "us-letter", margin: (x: 0.6in, y: 0.5in))
-#set text(font: "New Computer Modern", size: 11pt)
+#set page(paper: sys.inputs.at("paper", default: "a4"), margin: (x: 0.6in, y: 0.5in))
+// Other sizes are relative to this so the renderer can shrink everything to fit
+#let font-size = float(sys.inputs.at("font-size", default: "11")) * 1pt
+#set text(font: "New Computer Modern", size: font-size)
 #set par(justify: false, leading: 0.5em, spacing: 0.55em)
 #set list(indent: 0pt, spacing: 0.4em)
 
 #show heading.where(level: 1): it => block(above: 0.8em, below: 0.5em)[
-  #set text(size: 14pt, weight: "regular")
+  #set text(size: 1.27 * font-size, weight: "regular")
   #smallcaps(it.body)
   #v(-0.6em)
   #line(length: 100%, stroke: 0.4pt)
@@ -47,7 +49,7 @@
 #let network-icons = (linkedin: 0xf0e1, github: 0xf09b)
 #let with-icon(code, body) = [#icon(code) #body]
 
-#let sep = [ #h(0.3em)#text(size: 12pt)[·]#h(0.3em) ]
+#let sep = [ #h(0.3em)#text(size: 1.09em)[·]#h(0.3em) ]
 
 // Header
 #let loc = basics.at("location", default: (:))
@@ -69,7 +71,7 @@
 }
 
 #align(center)[
-  #text(size: 24pt, basics.at("name", default: ""))
+  #text(size: 2.18em, basics.at("name", default: ""))
   #v(-0.6em)
   #contact.join(sep) \
   #profiles.map(profile-link).join(sep)
@@ -83,7 +85,7 @@
 #let skills = resume.at("skills", default: ())
 #if skills.len() > 0 [
   = Technical Skills
-  #set text(size: 10pt)
+  #set text(size: 0.91em)
   // Fill column-major like LaTeX multicols, which Typst's columns() does not balance
   #let half = calc.ceil(skills.len() / 2)
   #let skill-list(items) = list(
@@ -112,7 +114,7 @@
     )
     #let courses = edu.at("courses", default: ())
     #if courses.len() > 0 {
-      set text(size: 10pt)
+      set text(size: 0.91em)
       [*Relevant Modules:* #courses.join(", ")]
     }
   ]
@@ -133,8 +135,10 @@
 #let projects = resume.at("projects", default: ())
 #if projects.len() > 0 [
   = Projects
-  #set text(size: 10pt)
+  #set text(size: 0.91em)
   #for p in projects [
     - #if "name" in p [*#p.name*: ]#rich(p.at("description", default: ""))
   ]
 ]
+
+#context [#metadata(counter(page).final().first()) <page-count>]
