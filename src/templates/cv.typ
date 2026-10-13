@@ -87,7 +87,10 @@
   // Fill column-major like LaTeX multicols, which Typst's columns() does not balance
   #let half = calc.ceil(skills.len() / 2)
   #let skill-list(items) = list(
-    ..items.map(s => [*#s.name*: #s.at("keywords", default: ()).join(", ")]),
+    ..items.map(s => {
+      let keywords = s.at("keywords", default: ()).join(", ")
+      if "name" in s [*#s.name*: #keywords] else [#keywords]
+    }),
   )
   #grid(
     columns: (1fr, 1fr),
@@ -100,7 +103,7 @@
 #if education.len() > 0 [
   = Education
   #for edu in education [
-    #row(strong(edu.institution), emph(date-range(edu)))
+    #row(strong(edu.at("institution", default: "")), emph(date-range(edu)))
     #row(
       emph((edu.at("studyType", default: none), edu.at("area", default: none))
         .filter(x => x != none)
@@ -119,7 +122,7 @@
 #if work.len() > 0 [
   = Experience
   #for job in work [
-    #row(strong(job.name), job.at("location", default: none))
+    #row(strong(job.at("name", default: "")), job.at("location", default: none))
     #row(emph(job.at("position", default: "")), emph(date-range(job)))
     #for h in job.at("highlights", default: ()) [
       - #rich(h)

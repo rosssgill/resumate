@@ -27,8 +27,9 @@ from render import render_pdf
             ],
             "projects": [{"name": "Resumate", "description": "A **CV** tool"}],
         },
+        {"skills": [{}], "education": [{}], "work": [{}], "projects": [{}]},
     ],
-    ids=["empty", "populated"],
+    ids=["empty", "populated", "entries-without-optional-fields"],
 )
 def test_renders_pdf(data):
     pdf = render_pdf(Resume.model_validate(data))
