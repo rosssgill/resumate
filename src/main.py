@@ -35,7 +35,10 @@ def compile(
     Compile a resume from a JSON Resume file into a PDF.
     """
     try:
-        resume = Resume.model_validate_json(file_path.read_text())
+        resume = Resume.model_validate_json(file_path.read_text(encoding="utf-8"))
+    except UnicodeDecodeError as error:
+        typer.echo(f"{file_path} is not valid UTF-8: {error}", err=True)
+        raise typer.Exit(1) from error
     except ValidationError as error:
         typer.echo(f"Invalid resume in {file_path}:\n{error}", err=True)
         raise typer.Exit(1) from error
