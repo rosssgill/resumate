@@ -1,7 +1,7 @@
 [project]
 name = "resumate"
 version = "0.1.0"
-description = "A declarative Python based CLI tool that generates resumes from YAML files using LaTeX templates"
+description = "A declarative Python based CLI tool that generates resumes from JSON Resume files using Typst templates"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
