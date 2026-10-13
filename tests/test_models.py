@@ -47,7 +47,10 @@ def test_empty_resume_is_valid():
     assert resume.work == []
 
 
-@pytest.mark.parametrize("value", ["2023", "2023-04", "April 2023", "2023/04/29"])
+@pytest.mark.parametrize(
+    "value",
+    ["2023", "2023-04", "April 2023", "2023/04/29", 0, 1700006400, "1700006400"],
+)
 def test_rejects_dates_that_are_not_full_iso8601(value):
     with pytest.raises(ValidationError):
         Resume.model_validate({"work": [{"startDate": value}]})

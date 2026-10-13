@@ -1,9 +1,25 @@
 """Pydantic models for the JSON Resume schema (https://jsonresume.org/schema)."""
 
 import datetime
+import re
+from typing import Annotated, Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
 from pydantic.alias_generators import to_camel
+
+ISO_DATE_PATTERN = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+
+def _require_iso_date_string(value: Any) -> Any:
+    # Pydantic would otherwise also accept Unix timestamps as dates
+    if isinstance(value, datetime.date) or (
+        isinstance(value, str) and ISO_DATE_PATTERN.match(value)
+    ):
+        return value
+    raise ValueError("date must be in YYYY-MM-DD format")
+
+
+IsoDate = Annotated[datetime.date, BeforeValidator(_require_iso_date_string)]
 
 
 class JsonResumeModel(BaseModel):
@@ -45,8 +61,8 @@ class Work(JsonResumeModel):
     description: str | None = None
     position: str | None = None
     url: str | None = None
-    start_date: datetime.date | None = None
-    end_date: datetime.date | None = None
+    start_date: IsoDate | None = None
+    end_date: IsoDate | None = None
     summary: str | None = None
     highlights: list[str] = []
 
@@ -55,8 +71,8 @@ class Volunteer(JsonResumeModel):
     organization: str | None = None
     position: str | None = None
     url: str | None = None
-    start_date: datetime.date | None = None
-    end_date: datetime.date | None = None
+    start_date: IsoDate | None = None
+    end_date: IsoDate | None = None
     summary: str | None = None
     highlights: list[str] = []
 
@@ -66,22 +82,22 @@ class Education(JsonResumeModel):
     url: str | None = None
     area: str | None = None
     study_type: str | None = None
-    start_date: datetime.date | None = None
-    end_date: datetime.date | None = None
+    start_date: IsoDate | None = None
+    end_date: IsoDate | None = None
     score: str | None = None
     courses: list[str] = []
 
 
 class Award(JsonResumeModel):
     title: str | None = None
-    date: datetime.date | None = None
+    date: IsoDate | None = None
     awarder: str | None = None
     summary: str | None = None
 
 
 class Certificate(JsonResumeModel):
     name: str | None = None
-    date: datetime.date | None = None
+    date: IsoDate | None = None
     url: str | None = None
     issuer: str | None = None
 
@@ -89,7 +105,7 @@ class Certificate(JsonResumeModel):
 class Publication(JsonResumeModel):
     name: str | None = None
     publisher: str | None = None
-    release_date: datetime.date | None = None
+    release_date: IsoDate | None = None
     url: str | None = None
     summary: str | None = None
 
@@ -120,8 +136,8 @@ class Project(JsonResumeModel):
     description: str | None = None
     highlights: list[str] = []
     keywords: list[str] = []
-    start_date: datetime.date | None = None
-    end_date: datetime.date | None = None
+    start_date: IsoDate | None = None
+    end_date: IsoDate | None = None
     url: str | None = None
     roles: list[str] = []
     entity: str | None = None
