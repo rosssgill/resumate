@@ -2,12 +2,9 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Self
 
-import typer
 from dotenv import load_dotenv
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
-
-USER_ENV_FILE = Path(typer.get_app_dir("resumate")) / ".env"
 
 
 class Paper(StrEnum):
@@ -32,8 +29,7 @@ class Settings(BaseSettings):
         return self
 
 
-def load_env_files() -> None:
-    """Load ./.env, then the user .env, without overriding existing variables."""
+def load_env_file() -> None:
+    """Load ./.env without overriding variables that are already set."""
     # Exported rather than read into Settings so pydantic-ai finds provider API keys
     load_dotenv(Path(".env"))
-    load_dotenv(USER_ENV_FILE)

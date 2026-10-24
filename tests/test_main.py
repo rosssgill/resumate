@@ -4,7 +4,6 @@ import httpx
 from typer.testing import CliRunner
 
 from coach import Feedback, Suggestion
-from core import config
 from main import app, print_feedback
 
 runner = CliRunner()
@@ -228,10 +227,8 @@ def test_compile_reports_invalid_settings(tmp_path):
     assert "max_pages" in result.output
 
 
-def test_coach_reads_model_from_user_env_file(tmp_path, monkeypatch):
-    user_env = tmp_path / "user.env"
-    user_env.write_text("RESUMATE_MODEL=test\n")
-    monkeypatch.setattr(config, "USER_ENV_FILE", user_env)
+def test_coach_reads_model_from_env_file(tmp_path):
+    (tmp_path / ".env").write_text("RESUMATE_MODEL=test\n")
     resume_path = tmp_path / "cv.json"
     resume_path.write_text("{}")
 

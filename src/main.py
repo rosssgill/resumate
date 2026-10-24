@@ -7,7 +7,7 @@ from pydantic import ValidationError
 from pydantic_ai.exceptions import AgentRunError, UserError
 
 from coach import Feedback, Suggestion, coach, load_job
-from core.config import Paper, Settings, load_env_files
+from core.config import Paper, Settings, load_env_file
 from models import Resume
 from render import render_to_fit
 
@@ -22,7 +22,7 @@ app = typer.Typer(
 
 @app.callback()
 def main() -> None:
-    load_env_files()
+    load_env_file()
 
 
 ResumePath = Annotated[

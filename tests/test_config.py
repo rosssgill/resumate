@@ -3,8 +3,7 @@ import os
 import pytest
 from pydantic import ValidationError
 
-from core import config
-from core.config import Paper, Settings, load_env_files
+from core.config import Paper, Settings, load_env_file
 
 
 def test_defaults():
@@ -45,24 +44,23 @@ def test_rejects_invalid_values(values):
         Settings(**values)
 
 
-def test_load_env_files_reads_project_then_user_file(tmp_path, monkeypatch):
-    user_env = tmp_path / "user.env"
-    user_env.write_text("RESUMATE_MODEL=user-model\nANTHROPIC_API_KEY=user-key\n")
-    (tmp_path / ".env").write_text("RESUMATE_MODEL=project-model\n")
-    monkeypatch.setattr(config, "USER_ENV_FILE", user_env)
+def test_load_env_file_reads_current_directory(tmp_path, monkeypatch):
+    (tmp_path / ".env").write_text(
+        "RESUMATE_MODEL=project-model\nANTHROPIC_API_KEY=key\n"
+    )
     monkeypatch.chdir(tmp_path)
 
-    load_env_files()
+    load_env_file()
 
     assert os.environ["RESUMATE_MODEL"] == "project-model"
-    assert os.environ["ANTHROPIC_API_KEY"] == "user-key"
+    assert os.environ["ANTHROPIC_API_KEY"] == "key"
 
 
-def test_load_env_files_keeps_existing_environment(tmp_path, monkeypatch):
+def test_load_env_file_keeps_existing_environment(tmp_path, monkeypatch):
     (tmp_path / ".env").write_text("RESUMATE_MODEL=project-model\n")
     monkeypatch.chdir(tmp_path)
     monkeypatch.setenv("RESUMATE_MODEL", "real-model")
 
-    load_env_files()
+    load_env_file()
 
     assert os.environ["RESUMATE_MODEL"] == "real-model"

@@ -35,7 +35,7 @@ This writes `cv.pdf` next to the input. If the resume doesn't fit, the text shri
 
 ## Configuration
 
-Settings are read from, in order of priority: command-line flags, environment variables, a `.env` in the current directory, then `~/.config/resumate/.env`. Resumate's own settings use a `RESUMATE_` prefix:
+Settings are read from, in order of priority: command-line flags, environment variables, then a `.env` in the directory you run resumate from. Copy `.env.example` to `.env` to get started. Resumate's own settings use a `RESUMATE_` prefix:
 
 | Variable | Default | |
 |---|---|---|
@@ -46,7 +46,7 @@ Settings are read from, in order of priority: command-line flags, environment va
 | `RESUMATE_MIN_FONT_SIZE` | `10` | Smallest text size when fitting |
 | `RESUMATE_FONT_SIZE_STEP` | `0.25` | How much to shrink per attempt |
 
-The same files can hold provider settings such as API keys. Keep keys in `~/.config/resumate/.env`, outside any repository, so they can't be committed by accident.
+`.env` can also hold provider settings such as API keys. It's gitignored here; if you run resumate from another repository, make sure `.env` is gitignored there too, so keys can't be committed by accident.
 
 ## AI feedback
 
@@ -65,7 +65,7 @@ Bring your own model: set `RESUMATE_MODEL` (or pass `--model`) to any [pydantic-
 **Hosted API**: set the provider's API key. Your resume, including contact details, is sent to that provider.
 
 ```sh
-# ~/.config/resumate/.env
+# .env
 ANTHROPIC_API_KEY=sk-ant-...
 RESUMATE_MODEL=anthropic:claude-sonnet-5-5
 ```
@@ -75,7 +75,7 @@ OpenAI (`openai:...`, `OPENAI_API_KEY`) and Google (`google:...`, `GOOGLE_API_KE
 **Local model with Ollama**: free, and your resume never leaves your machine.
 
 ```sh
-# ~/.config/resumate/.env
+# .env
 OLLAMA_BASE_URL=http://localhost:11434/v1
 RESUMATE_MODEL=ollama:hf.co/unsloth/Qwen3.8-27B-GGUF:UD-Q3_K_XL
 ```
