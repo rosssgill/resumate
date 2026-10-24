@@ -4,6 +4,7 @@ import httpx
 from typer.testing import CliRunner
 
 from coach import Feedback, Suggestion
+from core import config
 from main import app, print_feedback
 
 runner = CliRunner()
@@ -192,3 +193,48 @@ def test_print_feedback_shows_original_next_to_rewrite(capsys):
     assert "- Developed many services" in output
     assert "+ Built [X] services" in output
     assert output.index("- Developed") < output.index("+ Built")
+
+
+def test_compile_reads_settings_from_project_env_file(tmp_path):
+    (tmp_path / ".env").write_text("RESUMATE_PAPER=us-letter\n")
+    resume_path = tmp_path / "cv.json"
+    resume_path.write_text("{}")
+
+    result = runner.invoke(app, ["compile", str(resume_path)])
+
+    assert result.exit_code == 0, result.output
+    assert b"612 792" in (tmp_path / "cv.pdf").read_bytes()
+
+
+def test_compile_flags_override_env_file(tmp_path):
+    (tmp_path / ".env").write_text("RESUMATE_PAPER=us-letter\n")
+    resume_path = tmp_path / "cv.json"
+    resume_path.write_text("{}")
+
+    result = runner.invoke(app, ["compile", str(resume_path), "--paper", "a4"])
+
+    assert result.exit_code == 0, result.output
+    assert b"595.2756 841.8898" in (tmp_path / "cv.pdf").read_bytes()
+
+
+def test_compile_reports_invalid_settings(tmp_path):
+    (tmp_path / ".env").write_text("RESUMATE_MAX_PAGES=0\n")
+    resume_path = tmp_path / "cv.json"
+    resume_path.write_text("{}")
+
+    result = runner.invoke(app, ["compile", str(resume_path)])
+
+    assert result.exit_code == 1
+    assert "max_pages" in result.output
+
+
+def test_coach_reads_model_from_user_env_file(tmp_path, monkeypatch):
+    user_env = tmp_path / "user.env"
+    user_env.write_text("RESUMATE_MODEL=test\n")
+    monkeypatch.setattr(config, "USER_ENV_FILE", user_env)
+    resume_path = tmp_path / "cv.json"
+    resume_path.write_text("{}")
+
+    result = runner.invoke(app, ["coach", str(resume_path)])
+
+    assert result.exit_code == 0, result.output

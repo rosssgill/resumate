@@ -1,11 +1,11 @@
 import logging
 from dataclasses import dataclass
-from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
 import typst
 
+from core.config import Paper, Settings
 from models import Resume
 
 logger = logging.getLogger(__name__)
@@ -13,15 +13,6 @@ logger = logging.getLogger(__name__)
 TEMPLATES_DIR = Path(__file__).parent / "templates"
 FONTS_DIR = Path(__file__).parent / "fonts"
 TEMPLATE = TEMPLATES_DIR / "cv.typ"
-
-DEFAULT_FONT_SIZE = 11.0
-MIN_FONT_SIZE = 10.0
-FONT_SIZE_STEP = 0.25
-
-
-class Paper(StrEnum):
-    A4 = "a4"
-    US_LETTER = "us-letter"
 
 
 @dataclass(frozen=True)
@@ -44,12 +35,7 @@ def _typst_options(resume: Resume, paper: Paper, font_size: float) -> dict[str, 
     }
 
 
-def render_pdf(
-    resume: Resume,
-    *,
-    paper: Paper = Paper.A4,
-    font_size: float = DEFAULT_FONT_SIZE,
-) -> bytes:
+def render_pdf(resume: Resume, *, paper: Paper, font_size: float) -> bytes:
     pdf, warnings = typst.compile_with_warnings(
         TEMPLATE, **_typst_options(resume, paper, font_size)
     )
@@ -58,12 +44,7 @@ def render_pdf(
     return pdf
 
 
-def count_pages(
-    resume: Resume,
-    *,
-    paper: Paper = Paper.A4,
-    font_size: float = DEFAULT_FONT_SIZE,
-) -> int:
+def count_pages(resume: Resume, *, paper: Paper, font_size: float) -> int:
     return int(
         typst.query(
             TEMPLATE,
@@ -75,14 +56,16 @@ def count_pages(
     )
 
 
-def render_to_fit(
-    resume: Resume, *, max_pages: int = 1, paper: Paper = Paper.A4
-) -> RenderedResume:
-    """Render at the largest font size (down to MIN_FONT_SIZE) that fits max_pages."""
-    font_size = DEFAULT_FONT_SIZE
+def render_to_fit(resume: Resume, settings: Settings) -> RenderedResume:
+    """Render at the largest font size, down to the minimum, that fits max_pages."""
+    paper = settings.paper
+    font_size = settings.default_font_size
     pages = count_pages(resume, paper=paper, font_size=font_size)
-    while pages > max_pages and font_size > MIN_FONT_SIZE:
-        font_size -= FONT_SIZE_STEP
+    while pages > settings.max_pages and font_size > settings.min_font_size:
+        font_size = max(font_size - settings.font_size_step, settings.min_font_size)
         pages = count_pages(resume, paper=paper, font_size=font_size)
-    pdf = render_pdf(resume, paper=paper, font_size=font_size)
-    return RenderedResume(pdf=pdf, pages=pages, font_size=font_size)
+    return RenderedResume(
+        pdf=render_pdf(resume, paper=paper, font_size=font_size),
+        pages=pages,
+        font_size=font_size,
+    )

@@ -1,7 +1,10 @@
 import pytest
 
+from core.config import Paper, Settings
 from models import Resume
-from render import MIN_FONT_SIZE, count_pages, render_pdf, render_to_fit
+from render import count_pages, render_pdf, render_to_fit
+
+DEFAULTS = Settings()
 
 
 @pytest.mark.parametrize(
@@ -32,7 +35,7 @@ from render import MIN_FONT_SIZE, count_pages, render_pdf, render_to_fit
     ids=["empty", "populated", "entries-without-optional-fields"],
 )
 def test_renders_pdf(data):
-    pdf = render_pdf(Resume.model_validate(data))
+    pdf = render_pdf(Resume.model_validate(data), paper=Paper.A4, font_size=11)
 
     assert pdf.startswith(b"%PDF")
 
@@ -47,7 +50,7 @@ def test_renders_without_typst_warnings(caplog):
         }
     )
 
-    render_pdf(resume)
+    render_pdf(resume, paper=Paper.A4, font_size=11)
 
     assert caplog.records == []
 
@@ -61,7 +64,7 @@ def resume_with_bullets(count: int) -> Resume:
 
 def smallest_overflowing_resume() -> Resume:
     count = 1
-    while count_pages(resume_with_bullets(count)) == 1:
+    while count_pages(resume_with_bullets(count), paper=Paper.A4, font_size=11) == 1:
         count += 1
     return resume_with_bullets(count)
 
@@ -71,39 +74,47 @@ def smallest_overflowing_resume() -> Resume:
     [("a4", b"595.2756 841.8898"), ("us-letter", b"612 792")],
 )
 def test_renders_requested_paper_size(paper, media_box):
-    pdf = render_pdf(Resume(), paper=paper)
+    pdf = render_pdf(Resume(), paper=paper, font_size=11)
 
     assert media_box in pdf
 
 
 def test_counts_pages():
-    assert count_pages(resume_with_bullets(1)) == 1
-    assert count_pages(resume_with_bullets(200)) > 1
+    assert count_pages(resume_with_bullets(1), paper=Paper.A4, font_size=11) == 1
+    assert count_pages(resume_with_bullets(200), paper=Paper.A4, font_size=11) > 1
 
 
 def test_fit_keeps_default_size_when_content_fits():
-    rendered = render_to_fit(resume_with_bullets(1))
+    rendered = render_to_fit(resume_with_bullets(1), DEFAULTS)
 
     assert rendered.font_size == 11
     assert rendered.pages == 1
 
 
 def test_fit_shrinks_text_to_stay_within_page_limit():
-    rendered = render_to_fit(smallest_overflowing_resume())
+    rendered = render_to_fit(smallest_overflowing_resume(), DEFAULTS)
 
-    assert MIN_FONT_SIZE <= rendered.font_size < 11
+    assert DEFAULTS.min_font_size <= rendered.font_size < 11
     assert rendered.pages == 1
 
 
 def test_fit_respects_max_pages():
-    rendered = render_to_fit(smallest_overflowing_resume(), max_pages=2)
+    rendered = render_to_fit(smallest_overflowing_resume(), Settings(max_pages=2))
 
     assert rendered.font_size == 11
     assert rendered.pages == 2
 
 
 def test_fit_stops_at_minimum_size_when_content_cannot_fit():
-    rendered = render_to_fit(resume_with_bullets(200))
+    rendered = render_to_fit(resume_with_bullets(200), DEFAULTS)
 
-    assert rendered.font_size == MIN_FONT_SIZE
+    assert rendered.font_size == DEFAULTS.min_font_size
     assert rendered.pages > 1
+
+
+def test_fit_never_goes_below_minimum_with_uneven_step():
+    settings = Settings(font_size_step=0.3)
+
+    rendered = render_to_fit(resume_with_bullets(200), settings)
+
+    assert rendered.font_size == settings.min_font_size

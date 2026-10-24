@@ -33,6 +33,21 @@ This writes `cv.pdf` next to the input. If the resume doesn't fit, the text shri
 | `--max-pages N` | `1` | Page limit to fit within |
 | `--paper` | `a4` | `a4` or `us-letter` |
 
+## Configuration
+
+Settings are read from, in order of priority: command-line flags, environment variables, a `.env` in the current directory, then `~/.config/resumate/.env`. Resumate's own settings use a `RESUMATE_` prefix:
+
+| Variable | Default | |
+|---|---|---|
+| `RESUMATE_MODEL` | none | Model for `coach` |
+| `RESUMATE_PAPER` | `a4` | Default paper size |
+| `RESUMATE_MAX_PAGES` | `1` | Default page limit |
+| `RESUMATE_DEFAULT_FONT_SIZE` | `11` | Starting text size in pt |
+| `RESUMATE_MIN_FONT_SIZE` | `10` | Smallest text size when fitting |
+| `RESUMATE_FONT_SIZE_STEP` | `0.25` | How much to shrink per attempt |
+
+The same files can hold provider settings such as API keys. Keep keys in `~/.config/resumate/.env`, outside any repository, so they can't be committed by accident.
+
 ## AI feedback
 
 ```sh
@@ -50,8 +65,9 @@ Bring your own model: set `RESUMATE_MODEL` (or pass `--model`) to any [pydantic-
 **Hosted API**: set the provider's API key. Your resume, including contact details, is sent to that provider.
 
 ```sh
-export ANTHROPIC_API_KEY=sk-ant-...
-export RESUMATE_MODEL=anthropic:claude-sonnet-5-5
+# ~/.config/resumate/.env
+ANTHROPIC_API_KEY=sk-ant-...
+RESUMATE_MODEL=anthropic:claude-sonnet-5-5
 ```
 
 OpenAI (`openai:...`, `OPENAI_API_KEY`) and Google (`google:...`, `GOOGLE_API_KEY`) work the same way. A Claude.ai subscription does not include API access; create a key at [console.anthropic.com](https://console.anthropic.com).
@@ -59,8 +75,9 @@ OpenAI (`openai:...`, `OPENAI_API_KEY`) and Google (`google:...`, `GOOGLE_API_KE
 **Local model with Ollama**: free, and your resume never leaves your machine.
 
 ```sh
-export OLLAMA_BASE_URL=http://localhost:11434/v1
-export RESUMATE_MODEL=ollama:hf.co/unsloth/Qwen3.8-27B-GGUF:UD-Q3_K_XL
+# ~/.config/resumate/.env
+OLLAMA_BASE_URL=http://localhost:11434/v1
+RESUMATE_MODEL=ollama:hf.co/unsloth/Qwen3.8-27B-GGUF:UD-Q3_K_XL
 ```
 
 Ollama's default 4,096-token context is too small: reasoning models think for 3–15K tokens before answering, and the run fails with a token limit error. Raise it with `sudo systemctl edit ollama`:

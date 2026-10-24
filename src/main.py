@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import httpx
 import typer
@@ -7,8 +7,9 @@ from pydantic import ValidationError
 from pydantic_ai.exceptions import AgentRunError, UserError
 
 from coach import Feedback, Suggestion, coach, load_job
+from core.config import Paper, Settings, load_env_files
 from models import Resume
-from render import Paper, render_to_fit
+from render import render_to_fit
 
 app = typer.Typer(
     no_args_is_help=True,
@@ -18,10 +19,25 @@ app = typer.Typer(
     ),
 )
 
+
+@app.callback()
+def main() -> None:
+    load_env_files()
+
+
 ResumePath = Annotated[
     Path,
     typer.Argument(help="Path to the JSON Resume file", exists=True, dir_okay=False),
 ]
+
+
+def load_settings(**overrides: Any) -> Settings:
+    """Settings from the environment, overridden by any CLI flags that were passed."""
+    try:
+        return Settings(**{k: v for k, v in overrides.items() if v is not None})
+    except ValidationError as error:
+        typer.echo(f"Invalid settings:\n{error}", err=True)
+        raise typer.Exit(1) from error
 
 
 def load_resume(file_path: Path) -> Resume:
@@ -45,23 +61,32 @@ def compile(
         ),
     ] = None,
     max_pages: Annotated[
-        int, typer.Option(min=1, help="Shrink the text to fit within this many pages")
-    ] = 1,
-    paper: Annotated[Paper, typer.Option(help="Paper size")] = Paper.A4,
+        int | None,
+        typer.Option(
+            min=1,
+            help="Shrink the text to fit within this many pages",
+            show_default="1, or RESUMATE_MAX_PAGES",
+        ),
+    ] = None,
+    paper: Annotated[
+        Paper | None,
+        typer.Option(help="Paper size", show_default="a4, or RESUMATE_PAPER"),
+    ] = None,
 ) -> None:
     """
     Compile a resume from a JSON Resume file into a PDF.
     """
+    settings = load_settings(max_pages=max_pages, paper=paper)
     resume = load_resume(file_path)
     output_path = output or file_path.with_suffix(".pdf")
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    rendered = render_to_fit(resume, max_pages=max_pages, paper=paper)
+    rendered = render_to_fit(resume, settings)
     output_path.write_bytes(rendered.pdf)
     pages = f"{rendered.pages} page{'s' if rendered.pages > 1 else ''}"
     typer.echo(f"Wrote {output_path} ({pages}, {rendered.font_size:g}pt text)")
-    if rendered.pages > max_pages:
+    if rendered.pages > settings.max_pages:
         typer.echo(
-            f"Warning: resume exceeds the {max_pages} page limit "
+            f"Warning: resume exceeds the {settings.max_pages} page limit "
             "even at the smallest text size",
             err=True,
         )
@@ -92,8 +117,8 @@ def coach_command(
     model: Annotated[
         str | None,
         typer.Option(
-            envvar="RESUMATE_MODEL",
             help="Model to use, e.g. anthropic:claude-sonnet-5-5 or ollama:qwen3",
+            show_default="RESUMATE_MODEL",
         ),
     ] = None,
     job: Annotated[
@@ -104,9 +129,11 @@ def coach_command(
     """
     Get feedback and suggested rewrites for a resume from an LLM of your choice.
     """
+    model = load_settings(model=model).model
     if not model:
         typer.echo(
-            "No model chosen. Pass --model or set RESUMATE_MODEL, "
+            "No model chosen. Pass --model or set RESUMATE_MODEL in your "
+            "environment or a .env file, "
             "e.g. anthropic:claude-sonnet-5-5 or ollama:qwen3.",
             err=True,
         )
