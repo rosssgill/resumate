@@ -25,8 +25,6 @@ Leave out `endDate` for a current role to show "Present".
 uv run src/main.py compile cv.json
 ```
 
-This writes `cv.pdf` next to the input. If the resume doesn't fit, the text shrinks from 11pt down to 10pt; if it still doesn't fit, the PDF is written anyway with a warning.
-
 | Option | Default | |
 |---|---|---|
 | `--output PATH` | input path with `.pdf` | Where to write the PDF |
@@ -79,17 +77,6 @@ OpenAI (`openai:...`, `OPENAI_API_KEY`) and Google (`google:...`, `GOOGLE_API_KE
 OLLAMA_BASE_URL=http://localhost:11434/v1
 RESUMATE_MODEL=ollama:hf.co/unsloth/Qwen3.8-27B-GGUF:UD-Q3_K_XL
 ```
-
-Ollama's default 4,096-token context is too small: reasoning models think for 3–15K tokens before answering, and the run fails with a token limit error. Raise it with `sudo systemctl edit ollama`:
-
-```ini
-[Service]
-Environment="OLLAMA_CONTEXT_LENGTH=32768"
-Environment="OLLAMA_FLASH_ATTENTION=1"
-Environment="OLLAMA_KV_CACHE_TYPE=q4_0"
-```
-
-Pick a model build that fits entirely in your GPU's memory, alongside about 1.5 GB for the context and whatever your desktop uses. Run `ollama ps` while it's working: anything other than `100% GPU` means part of the model is on the CPU and it will be several times slower. As a reference, Qwen3.8 27B `UD-Q3_K_XL` (13 GB) on a 16 GB Radeon RX 9070 runs at about 30 tokens/s, taking 2–5 minutes per review.
 
 ## Development
 
