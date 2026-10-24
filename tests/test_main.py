@@ -3,7 +3,8 @@ import json
 import httpx
 from typer.testing import CliRunner
 
-from main import app
+from coach import Feedback, Suggestion
+from main import app, print_feedback
 
 runner = CliRunner()
 
@@ -175,3 +176,19 @@ def test_coach_reports_unreachable_job_url(tmp_path, monkeypatch):
 
     assert result.exit_code == 1
     assert "403" in result.output
+
+
+def test_print_feedback_shows_original_next_to_rewrite(capsys):
+    suggestion = Suggestion(
+        path="work.0.highlights.0",
+        original="Developed many services",
+        issue="Vague",
+        rewrite="Built [X] services",
+    )
+
+    print_feedback(Feedback(summary="Fine", suggestions=[suggestion]))
+
+    output = capsys.readouterr().out
+    assert "- Developed many services" in output
+    assert "+ Built [X] services" in output
+    assert output.index("- Developed") < output.index("+ Built")

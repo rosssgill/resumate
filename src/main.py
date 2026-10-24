@@ -79,8 +79,10 @@ def print_feedback(feedback: Feedback) -> None:
         for suggestion in suggestions:
             typer.secho(f"  {suggestion.path}", fg=typer.colors.CYAN)
             typer.echo(f"    {suggestion.issue}")
+            if suggestion.original and suggestion.rewrite:
+                typer.secho(f"    - {suggestion.original}", fg=typer.colors.RED)
             if suggestion.rewrite:
-                typer.secho(f"    → {suggestion.rewrite}", fg=typer.colors.GREEN)
+                typer.secho(f"    + {suggestion.rewrite}", fg=typer.colors.GREEN)
         typer.echo()
 
 

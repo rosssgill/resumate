@@ -23,9 +23,14 @@ and anything that makes it harder to skim.
 - Point each suggestion at the field it concerns using dot notation with \
 zero-based indices, e.g. work.0.highlights.2 or basics.summary. Use "general" \
 for resume-wide points.
-- Rewrites must keep the facts. Never invent employers, dates, metrics, \
-technologies or achievements. Where a number would help but isn't given, use a \
-placeholder such as [X%].
+- Only raise issues you can see in the resume text, and quote the exact original \
+text each suggestion is about.
+- Rewrites may only rephrase, reorder, merge or cut what the resume already says. \
+Every specific in a rewrite (number, technology, method, scope, purpose or \
+outcome) must already appear in the resume. Anything else, including a number \
+that would help, must be a [placeholder] for the candidate to fill in or delete.
+- Don't add unsupported claims such as "at scale", "proven track record" or \
+"deep expertise". Write in the resume's voice, never in the first person.
 - Keep the resume's **bold** markup convention in rewrites.
 - If a job posting is given, prioritise relevance to it and name gaps, but never \
 suggest claiming experience the resume doesn't support.
@@ -35,6 +40,9 @@ suggest claiming experience the resume doesn't support.
 
 class Suggestion(BaseModel):
     path: str = Field(description="Field the suggestion is about, or 'general'")
+    original: str | None = Field(
+        default=None, description="Exact text from the resume this is about"
+    )
     issue: str = Field(description="What is weak and why, in one or two sentences")
     rewrite: str | None = Field(
         default=None, description="Suggested replacement text, if applicable"
